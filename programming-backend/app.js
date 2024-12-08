@@ -101,7 +101,7 @@ const getSSESubmission = async (request, urlPatternResult) => {
         console.log(messageData)
         const message = new TextEncoder().encode(`data: ${messageData}\n\n`);
         controller.enqueue(message);
-      }, 3000);
+      }, 1000);
     },
     cancel() {
       console.log(submissionId, "sse connection closed (server side)")

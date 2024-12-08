@@ -2,7 +2,6 @@ import { readable, writable } from "svelte/store";
 
 let user = localStorage.getItem("userUuid");
 
-// userUuid
 if (!user) {
   user = crypto.randomUUID().toString();
   localStorage.setItem("userUuid", user);
@@ -10,7 +9,6 @@ if (!user) {
 
 const userUuid = readable(user);
 
-// currentAssignment
 let storedCurrentAssignment = localStorage.getItem("currentAssignment")
 
 if(!storedCurrentAssignment) {

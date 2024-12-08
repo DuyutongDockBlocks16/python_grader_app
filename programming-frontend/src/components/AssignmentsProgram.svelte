@@ -5,6 +5,11 @@
 
     import TopBar from "./TopBar.svelte"
 
+    import CodeMirror from "svelte-codemirror-editor";
+    import { python } from "@codemirror/lang-python";
+    import { oneDark } from "@codemirror/theme-one-dark";
+
+
     let updatedResult = null;
     let eventSource;
 
@@ -13,15 +18,15 @@
 
     let submissionId = 0;
 
-    let isBeingGraded = 0;
+    let inGrading = 0;
+    let progress_width = 0;
 
-    let points = ($currentAssignment-1)*100;
+    let assignments_completed = $currentAssignment-1;
 
 
 
     onMount(() => {
         
-        // close sse when components being destroyed
         return () => {
             if(eventSource){
                 if (eventSource.readyState === 1) {
@@ -41,7 +46,6 @@
         }
         
         if(submissionId > 0 ){
-            // don't build repetitive sse connection
             if(eventSource && (eventSource.readyState == 1 || eventSource.readyState == 0)){
                 if(updatedResult && updatedResult["status"] === "processed"){
                     console.log(submissionId,"code graded, closing sse connection...");
@@ -53,13 +57,15 @@
                 if(updatedResult && updatedResult["status"] === "processed"){
                     return;
                 }
-                // build a new sse connection, binding with sumissionId
                 eventSource = new EventSource(`/api/sse/${submissionId}`);
                 console.log(submissionId,"sse connection open (client side)")
+                eventSource.onopen = () => {
+                    console.log(submissionId, "sse connection established");
+                };
                 eventSource.onmessage = (event) => {
                     console.log(submissionId,"sse event received")
                     updatedResult = JSON.parse(event.data);
-                    isBeingGraded = 0;
+                    inGrading = 0;
                 };
 
                 eventSource.onerror = (event) => {
@@ -71,7 +77,7 @@
 
 
 
-    const getAssignement = async () => {
+    const fetchAssignement = async () => {
         
         if ($currentAssignment > assignmentNumber) {
             return null;
@@ -80,11 +86,11 @@
         return await response.json();
     };
 
-    let assignmentPromise = getAssignement();
+    let assignmentPromise = fetchAssignement();
     
 
-    const submitCode = async (assignmentId) => {
-        if (code.length === 0 || isBeingGraded === 1) {
+    const submitAssignment = async (assignmentId) => {
+        if (code.length === 0 || inGrading === 1) {
             return;
         }
 
@@ -114,14 +120,15 @@
 
         submissionId = res.submissionId;
 
-        isBeingGraded = 1;
+        inGrading = 1;
 
        
     };
 
-    const goToNextAssignment = async () => {
+    const fetchNextAssignment = async () => {
         $currentAssignment++;
-        points = ($currentAssignment-1)*100;
+        assignments_completed = $currentAssignment-1;
+        progress_width = assignments_completed/assignmentNumber*100;
 
         
         if(eventSource){
@@ -133,47 +140,62 @@
         updatedResult = null;
         submissionId = 0;
         code = ""
-        assignmentPromise = getAssignement();
+        assignmentPromise = fetchAssignement();
     };
 
 
 </script>
 
-<TopBar points={points}/>
+<TopBar assignments_completed={assignments_completed}/>
 
-<h1 class="text-3xl font-bold mb-4">Programming Assignments</h1>
+<h1 class="font-mono text-3xl font-bold mb-4">Welcome to your Python course!</h1>
 
 {#await assignmentPromise}
-    <div class="text-gray-700">Loading assignment...</div>
+    <div class="text-gray-700">Loading...</div>
 {:then assignment}
     {#if assignment == null}
-        <div class="text-green-500">You have completed all of the assignments!</div>
+        <div class="mb-5 h-1 bg-gray-200">
+            <div class="h-1 bg-purple-500" style="width: {progress_width}%"></div>
+        </div>
+        <div class="text-green-500">Nice Job! You have completed the course!</div>
     {:else}
+        <div class="mb-5 h-1 bg-gray-200">
+            <div class="h-1 bg-purple-500" style="width: {progress_width}%"></div>
+        </div>
         <div id="assignment" class="mb-8">
-            <h2 class="text-2xl font-bold mb-4">Assignment-{$currentAssignment}: {assignment.title}</h2>
-            <p>{assignment.handout}</p>
-            <input type="textarea" bind:value={code} />
-            <button class="bg-blue-500" on:click={() => submitCode(assignment.id)} disabled={isBeingGraded === 1}>
-                Submit code for grading
+            <h2 class="text-2xl font-bold mb-4">Assignment #{$currentAssignment}: {assignment.title}</h2>
+            <div class="rounded-t-lg overflow-hidden border-t border-l border-r border-gray-400 p-4">
+                <p class="font-mono text-lg text-gray-800 text-center">
+                    {assignment.handout}
+                </p>
+            </div>
+            <CodeMirror id="editor"
+                bind:value={code}
+                lang={python()}
+                theme={oneDark}
+            />
+            <button id="submitbutton"
+                class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed" 
+                on:click={() => submitAssignment(assignment.id)} 
+                disabled={inGrading === 1}>
+                Submit for grading
             </button>
         </div>
         <div>
-            <h2 class="text-2xl font-bold mb-4">Result</h2>
+            <h2 class="text-2xl font-bold mb-4">Test Results</h2>
             {#if updatedResult != null}
                 <div id="result">
-                    <p class={updatedResult["correct"] ? 'bg-green-200' : 'bg-red-200'}><b>status: </b>{updatedResult["status"]}</p>
                     <p class={updatedResult["correct"] ? 'bg-green-200' : 'bg-red-200'}><b>grader_feedback: </b>{updatedResult["graderFeedback"]}</p>
-                    <p id="correctness" class={updatedResult["correct"] ? 'bg-green-200' : 'bg-red-200'}><b>{updatedResult["correct"] ? "Correct!": "Incorrect"}</b></p>
+                    <p id="correctness" class={updatedResult["correct"] ? 'bg-green-200' : 'bg-red-200'}><b>{updatedResult["correct"] ? "Passed!": "Not Passed..."}</b></p>
                     {#if $currentAssignment <= assignmentNumber && updatedResult["correct"] == true}
-                        <button id="next" class="bg-green-500" on:click={goToNextAssignment}>
-                            Next Assignment
+                        <button id="next" class="bg-green-500" on:click={fetchNextAssignment}>
+                            Fetch Next Assignment
                         </button> 
                     {/if}     
                 </div>
             {/if}
-            {#if isBeingGraded === 1}
-                <p class="bg-gray-200">Code submitted, waiting for grading result...</p>
-                <p class="bg-gray-200">You may not submit code again until the previously submitted one is graded.</p>
+            {#if inGrading === 1}
+                <p id="ingrading" class="bg-gray-200">In grading... Please wait</p>
             {/if}
         </div>
         
@@ -182,10 +204,6 @@
 {/await}
 
 <style>
-    input { 
-        @apply w-full border rounded p-2 h-40;
-    }
-
 
     button {
         @apply text-white px-4 py-2 rounded mt-4;

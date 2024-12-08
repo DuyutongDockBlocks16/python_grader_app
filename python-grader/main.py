@@ -93,20 +93,26 @@ async def grader(code, assignment_id,pool):
         sys.modules.pop(test_module_name)
     
     # 步骤2: 通过 unittest 运行 test_code.py 中的测试
-    result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromName(test_module_name))
-
-    if result.wasSuccessful():
-        grading_result = True
-        grader_feedback = "Test passed successfully."
-    else:
+    try:
+        result = unittest.TextTestRunner().run(unittest.defaultTestLoader.loadTestsFromName(test_module_name))
+        if result.wasSuccessful():
+            grading_result = True
+            grader_feedback = "Test passed successfully."
+        else:
+            grading_result = False
+            grader_feedback = "Test failed."
+            # 打印失败的测试信息
+            for failure in result.failures:
+                grader_feedback = grader_feedback + f"\nFailure in {failure[0]}: {failure[1]}"
+            # 或者打印错误信息
+            for error in result.errors:
+                grader_feedback = grader_feedback + f"\nError in {error[0]}: {error[1]}" # error[0] 是测试方法名，error[1] 是异常信息
+    except:
         grading_result = False
         grader_feedback = "Test failed."
-        # 打印失败的测试信息
-        for failure in result.failures:
-            grader_feedback = grader_feedback + f"\nFailure in {failure[0]}: {failure[1]}"
-        # 或者打印错误信息
-        for error in result.errors:
-            grader_feedback = grader_feedback + f"\nError in {error[0]}: {error[1]}" # error[0] 是测试方法名，error[1] 是异常信息
+
+
+    
 
     return grading_result, grader_feedback
 

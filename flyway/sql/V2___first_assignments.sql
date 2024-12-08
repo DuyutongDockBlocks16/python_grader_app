@@ -1,44 +1,44 @@
-INSERT INTO programming_assignments (title, assignment_order, handout, test_code) VALUES ('Hello', 1, 'Write a function "hello" that returns the string "Hello"', 
+INSERT INTO programming_assignments (title, assignment_order, handout, test_code) VALUES ('Your first program!', 1, 'Define a function named "hello_world" whose function is to return a string "hello_world"', 
 '
 import unittest
 import importlib
 import python_code
 
-class TestHello(unittest.TestCase):
+class TestHelloWorld(unittest.TestCase):
   def setUp(self):
     importlib.reload(python_code)
 
-  def test_hello(self):
-    self.assertEqual(python_code.hello(), "Hello", "Function should return \"Hello\"")
+  def test_hello_world(self):
+    self.assertEqual(python_code.hello_world(), "hello_world", "Function should return \"hello_world\"")
 ');
 
-INSERT INTO programming_assignments (title, assignment_order, handout, test_code) VALUES ('Hello world', 2, 'Write a function "hello" that returns the string "Hello world!"', 'import socket
-def guard(*args, **kwargs):
-  raise Exception("Internet is bad for you :|")
-socket.socket = guard
-
+INSERT INTO programming_assignments (title, assignment_order, handout, test_code) VALUES ('Hello Web Development', 2, 'Define a function named "hello_world" whose function is to return a string "Hello Web Development"', 
+'
 import unittest
-from python_code import *
+import importlib
+import python_code
 
-class TestHello(unittest.TestCase):
+class TestHelloWorld(unittest.TestCase):
+  def setUp(self):
+    importlib.reload(python_code)
 
-  def test_hello(self):
-    self.assertEqual(hello(), "Hello world!", "Function should return \"Hello world!\"")
+  def test_hello_world(self):
+    self.assertEqual(python_code.hello_world(), "Hello Web Development", "Function should return \"Hello Web Development\"")
 ');
 
-INSERT INTO programming_assignments (title, assignment_order, handout, test_code) VALUES ('Sum', 3, 'Write a function "sum" that takes two numbers as parameters and returns their sum.', 'import socket
-def guard(*args, **kwargs):
-  raise Exception("Internet is bad for you :|")
-socket.socket = guard
-
+INSERT INTO programming_assignments (title, assignment_order, handout, test_code) VALUES ('Let computer do computing!', 3, 'Define a function named "sum" that takes two numbers as parameters and returns their sum.', 
+'
 import unittest
-from python_code import *
+import importlib
+import python_code
 
-class TestHello(unittest.TestCase):
+class TestSum(unittest.TestCase):
+  def setUp(self):
+    importlib.reload(python_code)
 
   def test_sum_1(self):
-    self.assertEqual(sum(2, 4), 6, "Call sum(2, 4) should return 6.")
+    self.assertEqual(python_code.sum(1, 2), 3, "The sum of 1 and 2 should be 3.")
 
   def test_sum_2(self):
-    self.assertEqual(sum(40, 2), 42, "Call sum(40, 2) should return 42.")
+    self.assertEqual(python_code.sum(97, 3), 100, "The sum of 97 and 3 should be 100.")
 ');
