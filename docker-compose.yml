@@ -12,7 +12,7 @@ services:
       - programming-backend
       - programming-frontend
     ports:
-      - 7800:7800
+      - "7700:7800"
 
   python-grader:
     build: python-grader
@@ -55,8 +55,6 @@ services:
     restart: "no"
     env_file:
       - project.env
-    ports:
-      - "5432:5432"  # 将容器的 5432 端口映射到主机的 5432 端口
 
   programming-frontend:
     build: programming-frontend

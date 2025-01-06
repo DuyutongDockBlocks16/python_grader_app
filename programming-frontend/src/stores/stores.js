@@ -1,10 +1,13 @@
 import { readable, writable } from "svelte/store";
+import { v4 as uuidv4 } from 'uuid';
 
 let user = localStorage.getItem("userUuid");
 
 if (!user) {
-  user = crypto.randomUUID().toString();
+  // user = crypto.randomUUID().toString();
+  user = uuidv4();
   localStorage.setItem("userUuid", user);
+
 } 
 
 const userUuid = readable(user);
